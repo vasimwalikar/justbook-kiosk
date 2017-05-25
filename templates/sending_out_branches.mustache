@@ -1,0 +1,216 @@
+{{> header}}
+<div class="jumbotron">
+    <div class="container text-center">
+        <h3>OFFERS</h3>
+        <p>Offer exclusively for you : Upgrade your membership plan and 50% off</p>
+    </div>
+</div>
+<!-- Begin page content -->
+<div class="container-fluid background">
+    <div class="row content" id="context" data-context="" data-session="{{branchid}}">
+
+        {{> nav-left-branch}}
+
+        <div class="row col-md-9 filter-box">
+            <div class="col-md-3">
+                <label>Select Option:</label>
+                <select class="form-control" id="sending_reason" name="sending_reason">
+                </select>
+            </div>
+            <div class="col-md-3" id="branch">
+                <label>Select Branch:</label>
+                <select class="form-control" id="send_branch" name="send_branch">
+                </select>
+            </div>
+            <div class="col-md-6">
+                <button class="btn btn-primary" id="batch">Create Batch</button>
+                <input type="text" class="batch_num" id="batch_num">
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary" id="start">Start</button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary" id="stop">Stop</button>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary" id="update">Update</button>
+            </div>
+            </br>
+        </div>
+
+        <div class="col-md-9">
+            <div class="box">
+                <div class="box-body dataTables_wrapper">
+                    <table class="table table-bordered" id="sending_books">
+                        <thead>
+                            <tr>
+                                <th>Book Number</th>
+                                <th>Owner Branch</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+
+
+        {{> home-right}}
+
+    </div>
+</div>
+
+{{> footer}}
+
+<script>
+    $(document).ready(function(){
+        $('#sending_books').DataTable( {
+            "sPaginationType": "full_numbers",
+                "paging":   true,
+                "ordering": true,
+                "info":     true,
+                "searching": false
+        } );
+
+        $('#stop').hide();
+        $('#update').hide();
+        $('#branch').hide();
+        $.ajax({
+            url:'/getSendoutOptions',
+            type:'get',
+            success:function(data_new){
+                var val = JSON.parse(data_new);
+                val.forEach(function(arr){
+                    $('#sending_reason').append("<option value='"+arr['reason']+"'>"+arr['description']+"</option>");
+                });
+            }
+        });
+    });
+
+    $('#sending_reason').change(function(e){
+        var selected_value = $('#sending_reason').val();
+        $.ajax({
+            url:'/getSendoutBranches?option='+encodeURI(selected_value),
+            type:'get',
+            success:function(data_new){
+                $('#branch').show();
+                $('#send_branch').find('option').remove();
+                var val = JSON.parse(data_new);
+                val.forEach(function(arr){
+                    $('#send_branch').append("<option value="+arr['id']+">"+arr['name']+"</option>");
+                });
+            }
+        });
+    });
+    var pressed = false;
+    var chars = [];
+    var code = '';
+    var chkArray = [];
+    $(window).keypress(function(e) {
+        var t = $('#sending_books').DataTable();
+        if($('#context').attr('data-context') == 'start') {
+            chars.push(String.fromCharCode(e.which));
+            if (pressed == false) {
+                setTimeout(function () {
+                    if (chars.length >= 5) {
+                        var barcode = chars.join("");
+                        console.log($.inArray(barcode, chkArray));
+                        if ($.inArray(barcode, chkArray) == '-1') {
+                            chkArray.push(barcode);
+                            if(chkArray.length == 1){
+                                $('tbody').html('');
+                            }
+                            String.prototype.RFIDHexToString = function (delim) {
+                                return this.match(/[0-9A-Fa-f]{2}/g).map(function (c) {
+                                    var intVal = parseInt(c, 16);
+                                    return String.fromCharCode(intVal);
+                                }).join(delim || "").split("").reverse().join("");
+                            };
+                            code = barcode.RFIDHexToString();
+                            console.log(code);
+
+                            t.row.add([code,'','']);
+                            t.draw();
+
+                            // $('tbody').append('<tr><td>' + code + '</td><td></td><td></td></tr>');
+
+                        }
+                    }
+                    chars = [];
+                    pressed = false;
+                }, 500);
+            }
+            pressed = true;
+        }
+    });
+
+    $('#start').click(function(e){
+        e.preventDefault();
+        $('#context').attr('data-context','start');
+        $('#start').hide();
+        $('#update').hide();
+        $('#stop').show();
+    });
+
+    $('#batch').click(function(e){
+        e.preventDefault();
+        var batch_number = Math.floor((Math.random() * 9999999999) + 1000000000);
+        $('#batch_num').val(batch_number);
+    });
+
+    $('#stop').click(function(e){
+        e.preventDefault();
+        $('#start').show();
+        $('#stop').hide();
+        $('#update').show();
+        $('#context').attr('data-context','stop');
+    });
+
+    $('#update').click(function(e){
+        e.preventDefault();
+        var book_list = '';
+        var batch = $('#batch_num').val();
+        var option = $('#sending_reason').val();
+        var send_branch = $('#send_branch').val();
+        var table = document.getElementById("sending_books");
+        for (var i = 1, row; row = table.rows[i]; i++) {
+            for (var j = 0; j < 1; j++) {
+                book_list += row.cells[j].innerText+',';
+            }
+        }
+        console.log(book_list);
+        $.ajax({
+            url:'/updateSendingBooks',
+            type:'post',
+            data:{'books':book_list,'batch':batch,'reason':option,'send_branch':send_branch},
+            success:function(response_data){
+                var response_data = JSON.parse(response_data);
+                console.log(response_data);
+//                var branchid = $('#context').attr('data-session');
+//                response_data.forEach(function(arr)
+//                {
+//                    for (var i = 1, row; row = table.rows[i]; i++) {
+//                        for (var j = 0; j < 1; j++) {
+//                            if (row.cells[j].innerText == arr['book-no'] && arr['owner-id'] == branchid) {
+//                                row.cells[j + 1].innerText = arr['owner-branch-name'];
+//                                row.cells[j + 2].innerText = 'Book Recieved Successfully';
+//                            }else{
+//                                row.cells[j + 1].innerText = arr['owner-branch-name'];
+//                                row.cells[j + 2].innerText = arr['errors']['error'];
+//                            }
+//                        }
+//                    }
+//                });
+            }
+        });
+    });
+
+</script>
+<!-- <script src="js/jquery.dataTables.min.js"></script>
+<script src="js/dataTables.bootstrap.min.js"></script> -->
+</body>
+</html>

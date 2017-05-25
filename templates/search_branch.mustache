@@ -1,0 +1,99 @@
+{{> header}}
+<div class="jumbotron">
+    <div class="container text-center">
+        <h3>OFFERS</h3>
+        <p>Offer exclusively for you : Upgrade your membership plan and 50% off</p>
+    </div>
+</div>
+<!-- Begin page content -->
+<div class="container-fluid background">
+    <div class="row content" id="context" data-context="">
+
+        {{> nav-left-branch}}
+
+        <div class="input-group search">
+            <input type="text" class="form-control" id="search_box" placeholder="Search..">
+            <span class="input-group-btn">
+                <a href="#" class="btn btn-default" id="search">
+                    <span class="glyphicon glyphicon-search"></span>
+                </a>
+            </span>
+        </div>
+        </br>
+
+
+        <div class="col-md-7" id="search_result_div">
+            <div class="box">
+                <div class="box-body dataTables_wrapper">
+                    <table class="table table-bordered table-hover" id="search_result">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th colspan="2">Branch Stock</th>
+                                <th>Other Branch Stock</th>
+                                <!-- <th></th> -->
+                            </tr>
+                        
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+
+
+        {{> home-right}}
+
+    </div>
+</div>
+
+{{> footer}}
+
+<script>
+    $(document).ready(function(){
+        $('#search_result_div').hide();
+        $('#search_result').DataTable( {
+            "sPaginationType": "full_numbers",
+                "paging":   true,
+                "ordering": true,
+                "info":     true,
+                "searching": false
+        } );
+    });
+
+    $('#search').click(function(e){
+        e.preventDefault();
+        var search_str = $('#search_box').val();
+        if(search_str == ''){
+            alert('Please enter text');
+        }else{
+            $.ajax({
+                url:'/getSearchResults?search_text='+search_str,
+                type: 'get',
+                success: function(data_new){
+                    var data_new = JSON.parse(data_new);
+                    console.log(data_new[0]['titleBasic']['title']);
+                    var i=0;
+                    $('#search_result_div').show();
+                    var t = $('#search_result').DataTable();
+                    data_new.forEach(function(arr){
+                        t.row.add([arr['titleBasic']['title'],arr['titleBasic']['authorName'],arr['titleBasic']['totalBrhCount']+' Copies',arr['titleBasic']['avlCount']+' Available',arr['titleBasic']['totalCount']+' Available']);
+                            t.draw();
+                        // $('#search_result tbody').append('<tr><td>'+arr['titleBasic']['title']+'</td>'+
+                        //                 '<td>'+arr['titleBasic']['authorName']+'</td>'+
+                        //                 '<td>'+arr['titleBasic']['totalBrhCount']+' Copies</td>'+
+                        //                 '<td>'+arr['titleBasic']['avlCount']+' Available</td>'+
+                        //                 '<td>'+arr['titleBasic']['totalCount']+' Available</td></tr>');
+                    });
+                }
+            });
+        }
+    });
+
+</script>
+</body>
+</html>

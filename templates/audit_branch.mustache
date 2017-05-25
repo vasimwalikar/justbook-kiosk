@@ -1,0 +1,180 @@
+{{> header}}
+<div class="jumbotron">
+    <div class="container text-center">
+        <h3>OFFERS</h3>
+        <p>Offer exclusively for you : Upgrade your membership plan and 50% off</p>
+    </div>
+</div>
+<!-- Begin page content -->
+<div class="container-fluid background">
+    <div class="row content" id="context" data-context="start_audit" data-session="{{branchid}}">
+
+        {{> nav-left-branch}}
+
+        <div class="row">
+            {{branchname}}
+                {{#status}}
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" id="continue">Continue</button>
+                    </div>
+                {{/status}}
+                {{^status}}
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" id="start">Start</button>
+                    </div>
+                    {{/status}}
+            <div class="col-md-3">
+                <label>Select Location:</label>
+                <select class="form-control" id="shelf_location" name="shelf_location">
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary" id="stop">Stop</button>
+            </div>
+            
+        </div>
+
+        <div class="col-md-9" id="audit_books_div">
+            <table class="table table-bordered" id="audit_books">
+                <thead>
+                <th>Book Number</th>
+                <th>Message</th>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+
+
+        {{> home-right}}
+
+    </div>
+</div>
+
+{{> footer}}
+
+<script>
+    $(document).ready(function(){
+        $("#audit_books").DataTable({
+            scrollY: 500,
+            scrollX: true,
+            scrollCollapse: true,
+            fixedColumns: true,
+            fixedHeader: true,
+            "aoColumnDefs": [
+                { 'bSortable': false, 'aTargets': [  ] }
+
+            ],
+            searching: false,
+            paging: false,
+            dom: 'lBfrtip',
+            "bInfo" : false
+        });
+
+        $('#stop').hide();
+        $('#receive_books_div').hide();
+        $.ajax({
+            url:'/getShelfLocation',
+            type:'get',
+            success: function (data) {
+                var val = JSON.parse(data);
+                var val_new = val['shelf_location'];
+                val_new.forEach(function(arr){
+                    $('#shelf_location').append("<option value="+arr+">"+arr+"</option>");
+                });
+            }
+        })
+    });
+    var pressed = false;
+    var chars = [];
+    var code = '';
+    var chkArray = [];
+    $(window).keypress(function(e) {
+        var shelf_location = $('#shelf_location').val();
+        if($('#context').attr('data-context') == 'start') {
+            chars.push(String.fromCharCode(e.which));
+            if (pressed == false) {
+                setTimeout(function () {
+                    if (chars.length >= 5) {
+                        var barcode = chars.join("");
+                        console.log($.inArray(barcode, chkArray));
+                        if ($.inArray(barcode, chkArray) == '-1') {
+                            chkArray.push(barcode);
+                            if(chkArray.length == 1){
+                                $('tbody').html('');
+                            }
+                            String.prototype.RFIDHexToString = function (delim) {
+                                return this.match(/[0-9A-Fa-f]{2}/g).map(function (c) {
+                                    var intVal = parseInt(c, 16);
+                                    return String.fromCharCode(intVal);
+                                }).join(delim || "").split("").reverse().join("");
+                            };
+                            code = barcode.RFIDHexToString();
+                            console.log(code);
+                            $.ajax({
+                                url:'/stock_audit?book='+code+'&shelf='+shelf_location,
+                                type:'get',
+                                success: function (data) {
+                                    console.log(data);
+                                    var data_new = JSON.parse(data);
+                                    var message = data_new['message'];
+                                    var style_css = "style='color:green'";
+                                    if( message.indexOf('book belongs to other branch') >= 0 ||  message.indexOf('Change Location to') >= 0){
+                                        style_css = "style='color:red'";
+                                    }
+                                    $('#audit_books tbody').prepend('<tr '+style_css+'><td>'+data_new['book-no']+'</td><td>'+data_new['message']+'</td></tr>');
+                                }
+                            })
+                        }
+                    }
+                    chars = [];
+                    pressed = false;
+                }, 500);
+            }
+            pressed = true;
+        }
+    });
+
+    $('#start').click(function(e){
+        e.preventDefault();
+        $('#context').attr('data-context','start');
+        $('#start').hide();
+        $('#stop').show();
+        $.ajax({
+            url:'/startAudit',
+            type:'get',
+            success:function(data){
+
+            }
+        });
+    });
+
+    $('#continue').click(function(e){
+        e.preventDefault();
+        $('#context').attr('data-context','start');
+        $('#start').hide();
+        $('#stop').show();
+        $('#receive_books_div').show();
+    });
+
+
+    $('#stop').click(function(e){
+        e.preventDefault();
+        $('#start').show();
+        $('#stop').hide();
+        $('#context').attr('data-context','stop');
+        $.ajax({
+            url:'/stopAudit',
+            type:'get',
+            success:function(data){
+
+            }
+        });
+    });
+
+</script>
+<script src="js/jquery.dataTables.min.js"></script>
+<script src="js/dataTables.bootstrap.min.js"></script>
+</body>
+</html>

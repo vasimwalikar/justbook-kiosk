@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+<html lang="en" ng-app='App'>
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=egde"/>
+    <title>KIOSK</title>
+
+    <!-- LIBRARIES -->
+    <script src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+    <!-- STYLE / THEME -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+    <!--<link href="//cdncatalog.com/assets/flat-ui/css/flat-ui.css" rel="stylesheet">-->
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-theme.css" rel="stylesheet">
+
+    <!---fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Playfair+Display" rel="stylesheet">
+
+
+    <!-- THIS APP. -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+
+
+</head>
+
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!--<a class="navbar-brand" href="#">Welcome !</a>-->
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="jumbotron">
+    <div class="container text-center">
+        <h3>OFFERS</h3>
+        <p>Offer exclusively for you : Upgrade your membership plan and 50% off</p>
+    </div>
+</div>
+<!-- Begin page content -->
+<div class="container-fluid">
+    <div class="row content" >
+
+
+    {{> main_home_page}}
+
+
+
+    </div>
+</div>
+
+{{> footer}}
+
+<script>
+    function getCard(data,visibleCardCount) {
+        var response = '', items = 0;
+        var final_response = '';
+        var active = '';
+        var data_new = data;
+        for(var i=0;i<data_new.length;i++){
+            items++;
+            if(i==0) {
+                active ="active";
+            }
+            if(data_new[i]['isbn'] == 'NOISBN' || data_new[i]['isbn'] == ''){
+                var img = "http://cdn2.justbooksclc.com/title/0.jpg";
+            }else{
+                img = "http://cdn2.justbooksclc.com/medium/"+data_new[i]['isbn']+".jpg";
+            }
+            response += '<div class="col-md-2">' +
+                    '<a href="#">' +
+                    '<div class="slider">' +
+                    '<img src="'+img+'" alt="">' +
+                    '<div class="">' +
+                    '<p><a href="#">'+data_new[i]['title']+'</a></p>' +
+                    '</div>' +
+                    '<div class="ratings">' +
+                    '</div></div></a></div>';
+            if(items==visibleCardCount){
+
+                final_response += '<div class="item item_mostread '+active+'"><div class="row">'+response+'</div></div>';
+                response="";
+                items=0;
+                active ='';
+            }
+        }
+
+        if(items < visibleCardCount && items > 0)
+        {
+            final_response += '<div class="item item_mostread '+active+'"><div class="row">'+response+'</div></div>';
+        }
+        return final_response;
+    }
+
+    $(document).ready(function(ev){
+
+        $('#most_read_branch').html('');
+        $('#most_read_branch').html('<div class="carousel slide media-carousel" id="media1">'+
+                '<h4 class="text-left">Most Read at Location</h4>'+
+                '<div class="carousel-inner"></div><a data-slide="prev" href="#media1" class="left carousel-control">‹</a>'+
+                '<a data-slide="next" href="#media1" class="right carousel-control">›</a></div>');
+        $.ajax({
+            type: "GET",
+            url: "/getMostReadBranch",
+            success: function (data) {
+                var new_data = JSON.parse(data);
+                console.log(new_data);
+                var final_response1=getCard(new_data,6);
+                $('.carousel-inner').append(final_response1);
+            }
+        });
+
+        String.prototype.RFIDHexToString = function (delim) {
+            return this.match(/[0-9A-Fa-f]{2}/g).map(function(c) {
+                var intVal=parseInt(c,16);
+                return String.fromCharCode(intVal);
+            }).join(delim || "").split("").reverse().join("");
+        };
+
+        var pressed = false;
+        var chars = [];
+        var code = '';
+        var global_card = '';
+        $(window).keypress(function(e) {
+            chars.push(String.fromCharCode(e.which));
+            if (pressed == false) {
+                setTimeout(function(){
+                    if (chars.length >= 5) {
+                        var barcode = chars.join("");
+                        code = barcode. RFIDHexToString();
+//                        $(window).keydown(false);
+                        console.log(code);
+                        if(global_card != code) {
+                            global_card = code;
+                            $.ajax({
+                                type: "GET",
+                                url: "/detectCardType?cardno=" + code,
+                                success: function (data) {
+                                    console.log(data);
+                                    var data_new = JSON.parse(data);
+                                    var card_type = data_new['card-type'];
+                                    if (card_type == 'member') {
+                                        $.ajax({
+                                            type: "POST",
+                                            data: {'cardno': code},
+                                            url: "/getMemberDetails",
+                                            success: function (data) {
+                                                console.log(data);
+                                                var member_data = JSON.parse(data);
+                                                window.location.href = '/user?name=' + member_data['name'];
+                                            }
+                                        });
+                                    }else if(card_type == 'branch'){
+                                        window.location.href = '/branch?branch_id='+data_new['branch-id']+'&city_id='+data_new['city-id']
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    chars = [];
+                    pressed = false;
+                },500);
+            }
+            pressed = true;
+        });
+    });
+
+</script>
+</body>
+</html>
