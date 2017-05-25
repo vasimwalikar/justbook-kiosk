@@ -596,7 +596,7 @@ fieldset[disabled] .btn-danger.active {
 	}
 	
     /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
-    .row.content {height: 450px}
+    .row.content {height: 550px}
     
     /* Set gray background color and 100% height */
     .sidenav {
@@ -646,7 +646,7 @@ fieldset[disabled] .btn-danger.active {
   border-radius: 23px 23px 23px 23px;
   height: 40px;
   width : 40px;
-  margin-top: 70px
+  margin-top: 120px
 }
 /* Next button  */
 .media-carousel .carousel-control.right 
@@ -658,7 +658,7 @@ fieldset[disabled] .btn-danger.active {
   border-radius: 23px 23px 23px 23px;
   height: 40px;
   width : 40px;
-  margin-top: 70px
+  margin-top: 120px
 }
 /* Changes the position of the indicators */
 .media-carousel .carousel-indicators 
@@ -683,15 +683,27 @@ fieldset[disabled] .btn-danger.active {
 }
 .slider{
 	margin-bottom:20px;
-  
-	padding-top:5px;
+  height: 200px;
+	padding-top:10px;
 	border: 1px solid #ddd;
 	box-shadow: 3px 5px 4px #7f7f7f;
 }
+
+
 .slider p{
-	margin-top:5px;
-	margin-bottom:0px;
-	font-size:10px;
+
+  margin-top: 20px;
+  text-decoration: none;
+  color: #767676;
+  display: block;
+  max-height: 40px;
+  overflow-y: hidden;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.slider img{
+  height: 100px;
 }
 
 #media1 .col-md-2 .slider{
@@ -705,7 +717,7 @@ h1, h2, h3, h4, h5, h5{
 
 .footer{
 	background-color:#37474F;
-	height:200px;
+	
 }
 
 .thumbnail h4{
@@ -1241,4 +1253,13 @@ footer h3{
 #content-box{
   margin-top: 30px;
   padding: 30px;
+}
+
+.most_read_books{
+  box-shadow: 6px 8px 11px #7f7f7f;
+  padding:20px;
+  margin: 20px;
+  border: 1px solid grey;
+  background-color:#fff;
+  padding: 20px;
 }

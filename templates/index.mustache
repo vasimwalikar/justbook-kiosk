@@ -83,21 +83,26 @@
                         type: "GET",
                         url: "/"+api+"?bookno="+code,
                         success: function (data) {
+                            var response1 = '';
                             var val = JSON.parse(data);
                             if(typeof val['errors'] !== 'undefined'){
                                 response = val['errors'];
                             }else {
-                                response = '<div class="price_item col-sm-3" style="width:20%;box-shadow: 6px 8px 11px #7f7f7f; padding:20px;border: 1px solid grey;">' +
+                                response = '<div class="most_read_books col-sm-3" >' +
                                         '<div class="price_item_wrapper">' +
                                         '<div class="price_item_title"><h5>' + val['booknumber'] + '</h5></div>' +
                                         '<div class="item_cost_wrapper" >' +
                                         '<div class="price_item_title" ><h4>' + val['title'] + '</h4></div>' +
                                         '</div>' +
-                                        '<div class="price_item_text" id="price_item_text">Books - ' + val['bookstatus'] + '</div>' +
-                                        '</div></div><br><br>' +
-                                        '<a href="#" id="book_transaction" class="btn btn-primary" onclick="getContext()">'+button+'</a>';
+                                        '</div></div>' ;
+                            }
+                            if($('#book_transaction').length >0){
+                               
+                            }else{
+                                response1 = '<a href="#" id="book_transaction" class="btn btn-primary" onclick="getContext()">'+button+'</a>';
                             }
                             $('#most_read').append(response);
+                            $('#button_div').append(response1);
                         },
 
 
@@ -142,7 +147,7 @@
         $('#most_read').html('');
         $('#most_read').html('<div class="row text-center">'+
                                 '<br>'+
-                                '<h3><b>PLACE YOUR BOOK ON THE BELOW SCANNER </b></h3>'+
+                                '<h3><b>PLACE YOUR BOOK ON THE BELOW SCANNER</h3>'+
                                 '<br><br>'+
                                 '</div>');
     });
@@ -350,7 +355,7 @@
         $('#most_read').html('');
         $('#most_read').html('<div class="row text-center">'+
                 '<br>'+
-                '<h3><b>PLACE YOUR BOOK ON THE BELOW SCANNER </b></h3>'+
+                '<h3><b>PLACE YOUR BOOK ON THE BELOW SCANNER</b></h3>'+
                 '<br><br>'+
                 '</div>');
     });

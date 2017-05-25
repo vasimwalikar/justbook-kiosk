@@ -54,7 +54,7 @@
     </div>
 </div>
 <!-- Begin page content -->
-<div class="container-fluid">
+<div class="container-fluid background">
     <div class="row content" >
 
 
@@ -88,7 +88,7 @@
                     '<div class="slider">' +
                     '<img src="'+img+'" alt="">' +
                     '<div class="">' +
-                    '<p><a href="#">'+data_new[i]['title']+'</a></p>' +
+                    '<p>'+data_new[i]['title']+'</p>' +
                     '</div>' +
                     '<div class="ratings">' +
                     '</div></div></a></div>';
@@ -112,7 +112,7 @@
 
         $('#most_read_branch').html('');
         $('#most_read_branch').html('<div class="carousel slide media-carousel" id="media1">'+
-                '<h4 class="text-left">Most Read at Location</h4>'+
+                '<h2 class="text-center">Most Read at Location</h2>'+
                 '<div class="carousel-inner"></div><a data-slide="prev" href="#media1" class="left carousel-control">‹</a>'+
                 '<a data-slide="next" href="#media1" class="right carousel-control">›</a></div>');
         $.ajax({
